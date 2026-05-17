@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#"><i class="fa-solid fa-anchor me-2"></i>Smart Port Platform</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <span class="text-light me-3">
+                    <i class="fa-solid fa-user-circle me-1"></i> {{ user.name }} ({{ user.role }})
+                </span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">Port Overview</h2>
+            <p class="text-muted">Real-time statistics for Port Operations</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-white-50">Active Ships</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ stats.active_ships }}</h2>
+                    <i class="fa-solid fa-ship position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-white-50">Total Containers</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ stats.total_containers }}</h2>
+                    <i class="fa-solid fa-boxes-stacked position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 bg-warning text-dark h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-black-50">Running Cranes</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ stats.running_cranes }}</h2>
+                    <i class="fa-solid fa-truck-monster position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 bg-danger text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-white-50">Congestion Status</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ stats.congestion_status }}</h2>
+                    <i class="fa-solid fa-triangle-exclamation position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="fw-bold">Weekly Container Throughput</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="throughputChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="fw-bold">System Status</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                            Database Connection
+                            <span class="badge bg-success rounded-pill">Stable</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                            IoT Sensors
+                            <span class="badge bg-success rounded-pill">Online</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                            Auth Service
+                            <span class="badge bg-success rounded-pill">Active</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                            Logistics API
+                            <span class="badge bg-warning text-dark rounded-pill">Degraded</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('throughputChart').getContext('2d');
+        const chartData = {{ chart_data | tojson }};
+        
+        const throughputChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Containers Moved',
+                    data: chartData.containers_moved,
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

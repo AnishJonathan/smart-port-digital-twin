@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: smart_port_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=change-this-in-production
+      - MYSQL_USER=smartport
+      - MYSQL_PASSWORD=secret
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_DB=smartport_db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - port_network
+
+  db:
+    image: mysql:8.0
+    container_name: smart_port_db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootsecret
+      - MYSQL_DATABASE=smartport_db
+      - MYSQL_USER=smartport
+      - MYSQL_PASSWORD=secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - port_network
+
+networks:
+  port_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
