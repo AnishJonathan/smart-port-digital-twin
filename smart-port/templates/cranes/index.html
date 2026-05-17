@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Crane Monitoring{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Crane Monitoring System</h2>
+        {% if current_user.role == 'Admin' %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCraneModal">Register Crane</button>
+        {% endif %}
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        {% for crane in cranes %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 {% if crane.status == 'Fault' %}border-danger border-3{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ crane.crane_name }}</h5>
+                    <div class="mb-2">
+                        <strong>Status:</strong> 
+                        <span class="badge {% if crane.status == 'Active' %}bg-success{% elif crane.status == 'Fault' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                            {{ crane.status }}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Temperature:</strong> {{ crane.temperature | round(1) }} °C
+                        {% if crane.temperature > 85 %}
+                        <i class="fa-solid fa-triangle-exclamation text-danger" title="Overheating warning"></i>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Load:</strong> {{ crane.load_capacity | round(1) }}%
+                    </div>
+                    <div class="mb-2">
+                        <strong>Health:</strong> 
+                        <div class="progress mt-1">
+                            <div class="progress-bar {% if crane.health_score < 50 %}bg-danger{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ crane.health_score }}%;">{{ crane.health_score | round }}%</div>
+                        </div>
+                    </div>
+                    <div class="text-muted small mt-3">Last updated: {{ crane.last_updated.strftime('%H:%M:%S') }}</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center text-muted py-5">
+            No cranes registered in the system.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addCraneModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('cranes.add') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Register Crane</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Crane Name/ID</label>
+                        <input type="text" name="crane_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Crane</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,34 +3,23 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#"><i class="fa-solid fa-anchor me-2"></i>Smart Port Platform</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{ url_for('dashboard.index') }}">Dashboard</a>
-                </li>
-            </ul>
-            <div class="d-flex align-items-center">
-                <span class="text-light me-3">
-                    <i class="fa-solid fa-user-circle me-1"></i> {{ user.name }} ({{ user.role }})
-                </span>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
-            </div>
-        </div>
-    </div>
-</nav>
-
 <div class="container mt-4">
+    {% if alert %}
+    <div class="alert alert-warning alert-dismissible fade show mb-4 shadow-sm" role="alert">
+        <strong><i class="fa-solid fa-triangle-exclamation me-2"></i> System Alert:</strong> {{ alert }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold">Port Overview</h2>
-            <p class="text-muted">Real-time statistics for Port Operations</p>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold">Port Overview</h2>
+                <p class="text-muted">Real-time statistics for Port Operations</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-secondary fs-6"><i class="fa-solid fa-cloud me-2"></i>Weather: {{ stats.weather_condition }}</span>
+            </div>
         </div>
     </div>
 

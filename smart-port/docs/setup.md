@@ -37,6 +37,14 @@ Edit the `.env` file to match your desired settings.
 - **Primary:** The application defaults to MySQL if the `MYSQL_*` variables are provided and the host is reachable.
 - **Fallback:** If MySQL is not reachable or the variables are missing, the `development` environment will automatically fall back to using SQLite (created in `instance/smartport_dev.sqlite`), allowing you to run the app instantly without setting up a DB server.
 
+### Database Migrations
+This project uses Flask-Migrate (Alembic) for proper database version control.
+Before running the application for the first time, you must initialize the tables:
+```bash
+flask db upgrade
+```
+*Note: The application will automatically seed default users (Admin, Port Manager, Logistics Officer) on the first run after migrations.*
+
 ## 3. Running the Application (Local Dev)
 
 Start the Flask development server:

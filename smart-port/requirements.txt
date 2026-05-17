@@ -6,3 +6,11 @@ cryptography==42.0.5
 python-dotenv==1.0.1
 Werkzeug==3.0.1
 gunicorn==21.2.0
+Flask-Migrate==4.0.5
+APScheduler==3.10.4
+requests==2.31.0
+
+# DevOps and Testing
+pytest==8.1.1
+ruff==0.3.3
+black==24.2.0

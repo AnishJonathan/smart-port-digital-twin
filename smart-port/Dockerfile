@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install system dependencies required for mysqlclient/PyMySQL if needed
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc default-libmysqlclient-dev && \
+    apt-get install -y --no-install-recommends gcc default-libmysqlclient-dev curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
@@ -42,5 +42,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Command to run the application using gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "app:create_app()"]
+# Container healthcheck using curl
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Command to run the application using gunicorn config
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:create_app()"]
