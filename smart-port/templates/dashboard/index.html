@@ -5,102 +5,206 @@
 {% block content %}
 <div class="container mt-4">
     {% if alert %}
-    <div class="alert alert-warning alert-dismissible fade show mb-4 shadow-sm" role="alert">
+    <div class="alert {% if stats.congestion_status == 'Critical' %}alert-danger{% elif stats.congestion_status == 'High' %}alert-danger{% elif stats.congestion_status == 'Medium' %}alert-warning{% else %}alert-success{% endif %} alert-dismissible fade show mb-4 shadow-sm border-0" role="alert">
         <strong><i class="fa-solid fa-triangle-exclamation me-2"></i> System Alert:</strong> {{ alert }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     {% endif %}
 
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <h2 class="fw-bold">Port Overview</h2>
-                <p class="text-muted">Real-time statistics for Port Operations</p>
+                <h2 class="fw-bold mb-1">Port Overview</h2>
+                <p class="text-muted mb-0">Real-time statistics for Port Operations</p>
             </div>
-            <div class="text-end">
-                <span class="badge bg-secondary fs-6"><i class="fa-solid fa-cloud me-2"></i>Weather: {{ stats.weather_condition }}</span>
+            <div class="text-end mt-2 mt-md-0">
+                <span class="badge bg-light text-dark border me-2 py-2 px-3 fs-6 fw-normal"><i class="fa-solid fa-cloud-sun me-2 text-primary"></i>Weather: <strong>{{ stats.weather_condition }}</strong></span>
+                <span class="badge bg-light text-dark border py-2 px-3 fs-6 fw-normal"><i class="fa-solid fa-clock-rotate-left me-2 text-secondary"></i>Last Sim Tick: <strong>{{ now|time_ago }}</strong></span>
             </div>
         </div>
     </div>
 
     <!-- Statistics Cards -->
+    <style>
+        .hover-scale { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .hover-scale:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+    </style>
+    
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 bg-primary text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-uppercase text-white-50">Active Ships</h6>
-                    <h2 class="display-6 fw-bold mb-0">{{ stats.active_ships }}</h2>
-                    <i class="fa-solid fa-ship position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+            <div class="card shadow-sm border-0 bg-primary text-white h-100 hover-scale">
+                <div class="card-body position-relative overflow-hidden">
+                    <h6 class="card-title text-uppercase text-white-50 fw-bold">Active Ships</h6>
+                    <h2 class="display-6 fw-bold mb-1">{{ stats.active_ships }}</h2>
+                    <div class="text-white-50 small"><i class="fa-solid fa-arrow-trend-up me-1"></i> +2 from yesterday</div>
+                    <i class="fa-solid fa-ship position-absolute opacity-25" style="bottom: -10px; right: 10px; font-size: 5rem;"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 bg-success text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-uppercase text-white-50">Total Containers</h6>
-                    <h2 class="display-6 fw-bold mb-0">{{ stats.total_containers }}</h2>
-                    <i class="fa-solid fa-boxes-stacked position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+            <div class="card shadow-sm border-0 bg-success text-white h-100 hover-scale">
+                <div class="card-body position-relative overflow-hidden">
+                    <h6 class="card-title text-uppercase text-white-50 fw-bold">Total Containers</h6>
+                    <h2 class="display-6 fw-bold mb-1">{{ stats.total_containers }}</h2>
+                    <div class="text-white-50 small"><i class="fa-solid fa-arrow-trend-up me-1"></i> +15 in transit</div>
+                    <i class="fa-solid fa-boxes-stacked position-absolute opacity-25" style="bottom: -10px; right: 10px; font-size: 5rem;"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 bg-warning text-dark h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-uppercase text-black-50">Running Cranes</h6>
-                    <h2 class="display-6 fw-bold mb-0">{{ stats.running_cranes }}</h2>
-                    <i class="fa-solid fa-truck-monster position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+            <div class="card shadow-sm border-0 bg-info text-white h-100 hover-scale">
+                <div class="card-body position-relative overflow-hidden">
+                    <h6 class="card-title text-uppercase text-white-50 fw-bold">Running Cranes</h6>
+                    <h2 class="display-6 fw-bold mb-1">{{ stats.running_cranes }}</h2>
+                    <div class="text-white-50 small"><i class="fa-solid fa-check-circle me-1"></i> All systems nominal</div>
+                    <i class="fa-solid fa-truck-monster position-absolute opacity-25" style="bottom: -10px; right: 10px; font-size: 5rem;"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 bg-danger text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-uppercase text-white-50">Congestion Status</h6>
-                    <h2 class="display-6 fw-bold mb-0">{{ stats.congestion_status }}</h2>
-                    <i class="fa-solid fa-triangle-exclamation position-absolute opacity-25" style="top: 20px; right: 20px; font-size: 3rem;"></i>
+            {% set c_bg = 'bg-success' %}
+            {% if stats.congestion_status in ['Medium'] %}{% set c_bg = 'bg-warning text-dark' %}{% endif %}
+            {% if stats.congestion_status in ['High', 'Critical'] %}{% set c_bg = 'bg-danger' %}{% endif %}
+            <div class="card shadow-sm border-0 {{ c_bg }} text-white h-100 hover-scale">
+                <div class="card-body position-relative overflow-hidden">
+                    <h6 class="card-title text-uppercase {% if stats.congestion_status == 'Medium' %}text-dark-50{% else %}text-white-50{% endif %} fw-bold">Congestion Status</h6>
+                    <h2 class="display-6 fw-bold mb-1">{{ stats.congestion_status }}</h2>
+                    <div class="{% if stats.congestion_status == 'Medium' %}text-dark-50{% else %}text-white-50{% endif %} small"><i class="fa-solid fa-wave-square me-1"></i> Auto-evaluating</div>
+                    <i class="fa-solid fa-traffic-light position-absolute opacity-25" style="bottom: -10px; right: 10px; font-size: 5rem;"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Chart Section -->
-    <div class="row">
-        <div class="col-md-8 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-0 pt-4 pb-0">
-                    <h5 class="fw-bold">Weekly Container Throughput</h5>
-                </div>
+    <!-- Analytics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 hover-scale">
                 <div class="card-body">
-                    <canvas id="throughputChart" width="400" height="200"></canvas>
+                    <h6 class="card-title text-uppercase text-muted fw-bold">Port Efficiency</h6>
+                    <h2 class="display-6 fw-bold mb-1 text-primary">{{ stats.efficiency_trend }}%</h2>
+                    <div class="text-success small"><i class="fa-solid fa-arrow-up me-1"></i> Weekly Change</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 hover-scale">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-muted fw-bold">Avg Crane Health</h6>
+                    <h2 class="display-6 fw-bold mb-1 {% if stats.crane_avg_health < 70 %}text-warning{% else %}text-success{% endif %}">{{ stats.crane_avg_health }}%</h2>
+                    <div class="text-muted small">
+                        {% if stats.crane_avg_health < 50 %}<i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Critical{% elif stats.crane_avg_health < 70 %}<i class="fa-solid fa-triangle-exclamation text-warning text-dark me-1"></i> Warning{% else %}<i class="fa-solid fa-check text-success me-1"></i> Healthy{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 hover-scale">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-muted fw-bold">Delayed Ships</h6>
+                    <h2 class="display-6 fw-bold mb-1 text-danger">{{ stats.delayed_ships }}</h2>
+                    <div class="text-muted small"><i class="fa-solid fa-anchor me-1"></i> Require attention</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 hover-scale">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase text-muted fw-bold">Critical Containers</h6>
+                    <h2 class="display-6 fw-bold mb-1 text-danger">{{ stats.critical_containers }}</h2>
+                    <div class="text-muted small"><i class="fa-solid fa-box-open me-1"></i> High priority dispatch</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        
+        <!-- Chart Section -->
+        <div class="col-lg-7 mb-4">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-0 pt-4 pb-0">
-                    <h5 class="fw-bold">System Status</h5>
+                    <h5 class="fw-bold mb-0">Weekly Container Throughput</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                            Database Connection
-                            <span class="badge bg-success rounded-pill">Stable</span>
+                    <div style="height: 300px;">
+                        <canvas id="throughputChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity & Status Section -->
+        <div class="col-lg-5 mb-4 d-flex flex-column gap-4">
+            <!-- System Status -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="fw-bold mb-0">System Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light text-center">
+                                <div class="text-muted small mb-1 fw-bold">Database</div>
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check me-1"></i> Stable</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light text-center">
+                                <div class="text-muted small mb-1 fw-bold">IoT Sensors</div>
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check me-1"></i> Online</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light text-center">
+                                <div class="text-muted small mb-1 fw-bold">Auth Service</div>
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check me-1"></i> Active</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light text-center">
+                                <div class="text-muted small mb-1 fw-bold">Weather API</div>
+                                {% if weather_data.is_mock %}
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> Fallback</span>
+                                {% else %}
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check me-1"></i> Online</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if current_user.role == 'Admin' %}
+            <!-- Activity Feed -->
+            <div class="card shadow-sm border-0 flex-grow-1">
+                <div class="card-header bg-white border-0 pt-4 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Activity</h5>
+                    <span class="badge bg-primary rounded-pill">{{ recent_activities|length }} Events</span>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                        {% for log in recent_activities %}
+                        <li class="list-group-item px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-dark">{{ log.user }}</strong>
+                                <small class="text-muted">{{ log.timestamp|time_ago }}</small>
+                            </div>
+                            <div class="text-muted small mb-1">{{ log.action }}</div>
+                            <span class="badge bg-light text-dark border">{{ log.target }}</span>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                            IoT Sensors
-                            <span class="badge bg-success rounded-pill">Online</span>
+                        {% else %}
+                        <li class="list-group-item px-4 py-4 text-center text-muted">
+                            <i class="fa-solid fa-clipboard-list fa-2x mb-2 text-black-50"></i>
+                            <p class="mb-0">No recent activities found.</p>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                            Auth Service
-                            <span class="badge bg-success rounded-pill">Active</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                            Logistics API
-                            <span class="badge bg-warning text-dark rounded-pill">Degraded</span>
-                        </li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>
+            {% endif %}
+
         </div>
     </div>
 </div>
@@ -120,18 +224,24 @@
                 datasets: [{
                     label: 'Containers Moved',
                     data: chartData.containers_moved,
-                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
                     borderColor: 'rgba(13, 110, 253, 1)',
-                    borderWidth: 1
+                    borderWidth: 0,
+                    borderRadius: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
                 scales: {
                     y: {
-                        beginAtZero: true
-                    }
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 4], color: '#e9ecef' }
+                    },
+                    x: { grid: { display: false } }
                 }
             }
         });

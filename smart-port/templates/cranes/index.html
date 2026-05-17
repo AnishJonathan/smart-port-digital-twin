@@ -1,83 +1,155 @@
 {% extends "base.html" %}
 
-{% block title %}Crane Monitoring{% endblock %}
+{% block title %}IoT Cranes Monitoring{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Crane Monitoring System</h2>
-        {% if current_user.role == 'Admin' %}
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCraneModal">Register Crane</button>
-        {% endif %}
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">IoT Cranes</h2>
+            <p class="text-muted mb-0">Real-time status monitoring</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            {% if current_user.role == 'Admin' %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCraneModal"><i class="fa-solid fa-plus me-1"></i> Register Crane</button>
+            {% endif %}
+        </div>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-light rounded d-flex gap-3 flex-wrap">
+            <form class="d-flex flex-grow-1 gap-2" method="GET" action="{{ url_for('cranes.index') }}">
+                <input type="text" class="form-control" name="search" placeholder="Search by name..." value="{{ search }}">
+                <select class="form-select" name="status" style="max-width: 200px;">
+                    <option value="">All Statuses</option>
+                    <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Idle" {% if status_filter == 'Idle' %}selected{% endif %}>Idle</option>
+                    <option value="Maintenance" {% if status_filter == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                    <option value="Fault" {% if status_filter == 'Fault' %}selected{% endif %}>Fault</option>
+                </select>
+                <select class="form-select" name="sort" style="max-width: 200px;">
+                    <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>Latest</option>
+                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest</option>
+                    <option value="health" {% if sort_by == 'health' %}selected{% endif %}>By Health</option>
+                </select>
+                <button type="submit" class="btn btn-outline-secondary"><i class="fa-solid fa-filter"></i></button>
+            </form>
+        </div>
+    </div>
+
+    {% if cranes %}
     <div class="row">
         {% for crane in cranes %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0 {% if crane.status == 'Fault' %}border-danger border-3{% endif %}">
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 h-100 position-relative overflow-hidden">
                 <div class="card-body">
-                    <h5 class="card-title">{{ crane.crane_name }}</h5>
-                    <div class="mb-2">
-                        <strong>Status:</strong> 
-                        <span class="badge {% if crane.status == 'Active' %}bg-success{% elif crane.status == 'Fault' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                            {{ crane.status }}
-                        </span>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title fw-bold mb-0 text-dark">{{ crane.crane_name }}</h5>
+                        {% set status_color = 'bg-secondary' %}
+                        {% if crane.status == 'Active' %}{% set status_color = 'bg-success' %}{% endif %}
+                        {% if crane.status == 'Idle' %}{% set status_color = 'bg-primary' %}{% endif %}
+                        {% if crane.status == 'Maintenance' %}{% set status_color = 'bg-warning text-dark' %}{% endif %}
+                        {% if crane.status == 'Fault' %}{% set status_color = 'bg-danger' %}{% endif %}
+                        <span class="badge {{ status_color }} px-2 py-1">{{ crane.status }}</span>
                     </div>
-                    <div class="mb-2">
-                        <strong>Temperature:</strong> {{ crane.temperature | round(1) }} °C
-                        {% if crane.temperature > 85 %}
-                        <i class="fa-solid fa-triangle-exclamation text-danger" title="Overheating warning"></i>
-                        {% endif %}
+                    
+                    {% if crane.temperature > 75 %}
+                    <div class="alert alert-danger py-1 px-2 small mb-3 border-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Overheating Detected
                     </div>
-                    <div class="mb-2">
-                        <strong>Load:</strong> {{ crane.load_capacity | round(1) }}%
-                    </div>
-                    <div class="mb-2">
-                        <strong>Health:</strong> 
-                        <div class="progress mt-1">
-                            <div class="progress-bar {% if crane.health_score < 50 %}bg-danger{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ crane.health_score }}%;">{{ crane.health_score | round }}%</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Health</small>
+                            <small class="fw-bold {% if crane.health_score < 40 %}text-danger{% elif crane.health_score < 70 %}text-warning{% else %}text-success{% endif %}">
+                                {{ crane.health_score }}%
+                            </small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar {% if crane.health_score < 40 %}bg-danger{% elif crane.health_score < 70 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ crane.health_score }}%"></div>
                         </div>
                     </div>
-                    <div class="text-muted small mt-3">Last updated: {{ crane.last_updated.strftime('%H:%M:%S') }}</div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="bg-light p-2 rounded text-center">
+                                <small class="text-muted d-block">Temp</small>
+                                <strong class="{% if crane.temperature > 75 %}text-danger{% endif %}">{{ crane.temperature }}°C</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light p-2 rounded text-center">
+                                <small class="text-muted d-block">Capacity</small>
+                                <strong>{{ crane.load_capacity }}t</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if current_user.role == 'Admin' %}
+                    <div class="text-end border-top pt-3 mt-auto">
+                        <form action="{{ url_for('cranes.delete', id=crane.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Delete crane {{ crane.crane_name }}?');"><i class="fa-solid fa-trash me-1"></i> Delete Unit</button>
+                        </form>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        {% else %}
-        <div class="col-12 text-center text-muted py-5">
-            No cranes registered in the system.
-        </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="card shadow-sm border-0 text-center py-5">
+        <div class="card-body">
+            <div class="display-1 text-muted mb-3 opacity-25"><i class="fa-solid fa-truck-monster"></i></div>
+            <h4 class="text-muted fw-bold">No cranes found</h4>
+            <p class="text-muted mb-4">There are no cranes matching your criteria.</p>
+            {% if current_user.role == 'Admin' %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCraneModal">Register First Crane</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
+{% if current_user.role == 'Admin' %}
 <!-- Add Modal -->
 <div class="modal fade" id="addCraneModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <form action="{{ url_for('cranes.add') }}" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Register Crane</h5>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Register IoT Crane</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label>Crane Name/ID</label>
-                        <input type="text" name="crane_name" class="form-control" required>
+                        <label class="form-label text-muted fw-bold">Crane Identifier</label>
+                        <input type="text" name="crane_name" class="form-control" placeholder="e.g. Crane Alpha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold">Initial Status</label>
+                        <select name="status" class="form-select">
+                            <option value="Idle">Idle</option>
+                            <option value="Active">Active</option>
+                            <option value="Maintenance">Maintenance</option>
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save Crane</button>
+                <div class="modal-footer bg-light">
+                    <button type="submit" class="btn btn-primary px-4">Register</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - 500{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5 pt-5">
+    <div class="display-1 text-muted mb-4"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h2 class="fw-bold text-dark mb-3">Something Went Wrong</h2>
+    <p class="text-muted mb-4">Our systems encountered an unexpected error. Please try again later.</p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary px-4"><i class="fa-solid fa-arrow-left me-2"></i>Return to Dashboard</a>
+</div>
+{% endblock %}
