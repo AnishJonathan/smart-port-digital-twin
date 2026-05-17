@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}IoT Cranes Monitoring{% endblock %}
+{% block title %}Cranes Monitoring{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">IoT Cranes</h2>
+            <h2 class="fw-bold mb-0">Cranes</h2>
             <p class="text-muted mb-0">Real-time status monitoring</p>
         </div>
         <div class="mt-2 mt-md-0">
@@ -127,7 +127,7 @@
         <div class="modal-content border-0 shadow">
             <form action="{{ url_for('cranes.add') }}" method="POST">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold">Register IoT Crane</h5>
+                    <h5 class="modal-title fw-bold">Register Crane</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
