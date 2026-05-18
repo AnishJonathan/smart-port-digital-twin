@@ -19,6 +19,7 @@ services:
       - .:/app
     environment:
       - FLASK_ENV=production
+      - WEATHERAPI_KEY=4e7c491ad8c5473584042531261805
       - SECRET_KEY=change-this-in-production
       - MYSQL_USER=smartport
       - MYSQL_PASSWORD=secret

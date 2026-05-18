@@ -39,9 +39,12 @@ class CongestionEngine:
             congestion_score += 10
             
         # 4. Weather Factor
-        if weather_data['risk_level'] == 'High':
+        wind_speed = weather_data.get('wind_speed', 0)
+        condition = weather_data.get('condition', '')
+        
+        if wind_speed > 20.0 or condition == 'Thunderstorm':
             congestion_score += 40
-        elif weather_data['risk_level'] == 'Medium':
+        elif wind_speed > 15.0 or condition == 'Rain':
             congestion_score += 15
             
         # Determine Level
