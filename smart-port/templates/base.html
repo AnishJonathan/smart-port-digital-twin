@@ -23,19 +23,28 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('ships.index') }}">Ships</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('containers.index') }}">Containers</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('cranes.index') }}">Cranes</a>
-                    </li>
+                        {% if current_user.role in ['Admin', 'Port Manager'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'ships.index' %}active{% endif %}" href="{{ url_for('ships.index') }}"><i class="fa-solid fa-ship me-1"></i> Ships</a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'containers.index' %}active{% endif %}" href="{{ url_for('containers.index') }}"><i class="fa-solid fa-boxes-stacked me-1"></i> Containers</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'cranes.index' %}active{% endif %}" href="{{ url_for('cranes.index') }}"><i class="fa-solid fa-truck-monster me-1"></i> Cranes</a>
+                        </li>
                 </ul>
                 <div class="d-flex align-items-center">
-                    <span class="text-light me-3">
-                        <i class="fa-solid fa-user-circle me-1"></i> {{ current_user.name }} ({{ current_user.role }})
+                    <span class="navbar-text me-3 d-none d-lg-block text-light">
+                        <i class="fa-solid fa-user-circle me-1"></i> {{ current_user.name }}
+                        {% if current_user.role == 'Admin' %}
+                        <span class="badge bg-primary ms-1 rounded-pill">Admin</span>
+                        {% elif current_user.role == 'Port Manager' %}
+                        <span class="badge bg-success ms-1 rounded-pill">Manager</span>
+                        {% else %}
+                        <span class="badge bg-secondary ms-1 rounded-pill">Officer</span>
+                        {% endif %}
                     </span>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
                 </div>

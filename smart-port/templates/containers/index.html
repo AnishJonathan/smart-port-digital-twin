@@ -3,108 +3,183 @@
 {% block title %}Container Tracking{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Container Tracking</h2>
-        {% if current_user.role in ['Admin', 'Logistics Officer'] %}
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContainerModal">Register Container</button>
-        {% endif %}
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Containers</h2>
+            <p class="text-muted mb-0">Track and manage port cargo</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            {% if current_user.role == 'Admin' %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContainerModal"><i class="fa-solid fa-plus me-1"></i> Register Container</button>
+            {% endif %}
+        </div>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-light rounded d-flex gap-3 flex-wrap">
+            <form class="d-flex flex-grow-1 gap-2" method="GET" action="{{ url_for('containers.index') }}">
+                <input type="text" class="form-control" name="search" placeholder="Search by ID or destination..." value="{{ search }}">
+                <select class="form-select" name="status" style="max-width: 200px;">
+                    <option value="">All Statuses</option>
+                    <option value="Received" {% if status_filter == 'Received' %}selected{% endif %}>Received</option>
+                    <option value="In Yard" {% if status_filter == 'In Yard' %}selected{% endif %}>In Yard</option>
+                    <option value="Loading" {% if status_filter == 'Loading' %}selected{% endif %}>Loading</option>
+                    <option value="In Transit" {% if status_filter == 'In Transit' %}selected{% endif %}>In Transit</option>
+                    <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+                </select>
+                <select class="form-select" name="sort" style="max-width: 200px;">
+                    <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>Latest First</option>
+                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                    <option value="status" {% if sort_by == 'status' %}selected{% endif %}>By Status</option>
+                </select>
+                <button type="submit" class="btn btn-outline-secondary"><i class="fa-solid fa-filter"></i></button>
+            </form>
+        </div>
+    </div>
+
+    {% if containers %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th>ID</th>
+                        <th class="ps-4">Container ID</th>
                         <th>Location</th>
                         <th>Destination</th>
-                        <th>Status</th>
                         <th>Priority</th>
-                        <th>Weight</th>
+                        <th>Status</th>
                         {% if current_user.role in ['Admin', 'Logistics Officer'] %}
-                        <th>Actions</th>
+                        <th class="text-end pe-4">Actions</th>
                         {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in containers %}
                     <tr>
-                        <td>{{ c.container_id }}</td>
+                        <td class="ps-4 fw-bold text-primary">{{ c.container_id }}</td>
                         <td>{{ c.location }}</td>
                         <td>{{ c.destination }}</td>
-                        <td>{{ c.status }}</td>
                         <td>
-                            <span class="badge {% if c.priority == 'Critical' %}bg-danger{% else %}bg-secondary{% endif %}">{{ c.priority }}</span>
+                            {% set p_bg = 'bg-secondary' %}
+                            {% if c.priority == 'High' %}{% set p_bg = 'bg-warning text-dark' %}{% endif %}
+                            {% if c.priority == 'Critical' %}{% set p_bg = 'bg-danger' %}{% endif %}
+                            <span class="badge {{ p_bg }} rounded-pill">{{ c.priority }}</span>
                         </td>
-                        <td>{{ c.weight }}t</td>
-                        {% if current_user.role in ['Admin', 'Logistics Officer'] %}
                         <td>
-                            <form action="{{ url_for('containers.delete', id=c.id) }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete container?');">Delete</button>
-                            </form>
+                            {% set c_bg = 'bg-secondary' %}
+                            {% if c.status == 'In Yard' %}{% set c_bg = 'bg-primary' %}{% endif %}
+                            {% if c.status == 'Loading' %}{% set c_bg = 'bg-warning text-dark' %}{% endif %}
+                            {% if c.status == 'In Transit' %}{% set c_bg = 'bg-info text-dark' %}{% endif %}
+                            {% if c.status == 'Delivered' %}{% set c_bg = 'bg-success' %}{% endif %}
+                            <span class="badge {{ c_bg }}">{{ c.status }}</span>
+                        </td>
+                        {% if current_user.role in ['Admin', 'Logistics Officer'] %}
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <!-- Status Update for Logistics Officer and Admin -->
+                                <form action="{{ url_for('containers.update_status', id=c.id) }}" method="POST" class="d-inline d-flex gap-1">
+                                    <select name="status" class="form-select form-select-sm d-inline-block" style="width: 110px;">
+                                        <option value="Received" {% if c.status == 'Received' %}selected{% endif %}>Received</option>
+                                        <option value="In Yard" {% if c.status == 'In Yard' %}selected{% endif %}>In Yard</option>
+                                        <option value="Loading" {% if c.status == 'Loading' %}selected{% endif %}>Loading</option>
+                                        <option value="In Transit" {% if c.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                                        <option value="Delivered" {% if c.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Update Status"><i class="fa-solid fa-check"></i></button>
+                                </form>
+                                {% if current_user.role == 'Admin' %}
+                                <!-- Delete for Admin only -->
+                                <form action="{{ url_for('containers.delete', id=c.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete container {{ c.container_id }}?');"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </td>
                         {% endif %}
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center">No containers registered.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    {% else %}
+    <div class="card shadow-sm border-0 text-center py-5">
+        <div class="card-body">
+            <div class="display-1 text-muted mb-3 opacity-25"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <h4 class="text-muted fw-bold">No containers found</h4>
+            <p class="text-muted mb-4">There are no containers matching your criteria.</p>
+            {% if current_user.role == 'Admin' %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContainerModal">Register First Container</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
+{% if current_user.role == 'Admin' %}
 <!-- Add Modal -->
 <div class="modal fade" id="addContainerModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <form action="{{ url_for('containers.add') }}" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Register Container</h5>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Register Container</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label>Container ID</label>
+                        <label class="form-label fw-bold text-muted">Container ID</label>
                         <input type="text" name="container_id" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label>Location</label>
-                        <input type="text" name="location" class="form-control" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Location</label>
+                            <input type="text" name="location" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Destination</label>
+                            <input type="text" name="destination" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Weight (kg)</label>
+                            <input type="number" step="0.1" name="weight" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Priority</label>
+                            <select name="priority" class="form-select">
+                                <option>Standard</option>
+                                <option>High</option>
+                                <option>Critical</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label>Destination</label>
-                        <input type="text" name="destination" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Weight (Tons)</label>
-                        <input type="number" step="0.1" name="weight" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Priority</label>
-                        <select name="priority" class="form-select">
-                            <option value="Standard">Standard</option>
-                            <option value="High">High</option>
-                            <option value="Critical">Critical</option>
+                        <label class="form-label fw-bold text-muted">Assign to Ship (Optional)</label>
+                        <select name="ship_id" class="form-select">
+                            <option value="">-- None --</option>
+                            {% for s in ships %}
+                            <option value="{{ s.id }}">{{ s.ship_name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save Container</button>
+                <div class="modal-footer bg-light">
+                    <button type="submit" class="btn btn-primary px-4">Register</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

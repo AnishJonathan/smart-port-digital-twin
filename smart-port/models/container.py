@@ -7,7 +7,7 @@ class Container(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     container_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
     location = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(50), nullable=False, default='Loading') # Loading, Unloading, In Transit, Delayed, Customs Hold
+    status = db.Column(db.String(50), nullable=False, default='Received') # Received, In Yard, Loading, In Transit, Delivered
     destination = db.Column(db.String(100), nullable=False)
     ship_id = db.Column(db.Integer, db.ForeignKey('ships.id'), nullable=True)
     priority = db.Column(db.String(20), nullable=False, default='Standard') # Standard, High, Critical

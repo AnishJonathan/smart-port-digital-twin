@@ -1,5 +1,5 @@
 import os
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, render_template
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from dotenv import load_dotenv
@@ -9,6 +9,7 @@ from database import db
 from models.user import User
 from utils.logging_setup import setup_logging
 from utils.seeding import seed_users
+from utils.filters import time_ago
 from services.simulation import run_simulation
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -63,10 +64,26 @@ def create_app(config_class=None):
     app.register_blueprint(containers_bp, url_prefix='/containers')
     app.register_blueprint(cranes_bp, url_prefix='/cranes')
     
+    # Register Jinja filters
+    app.jinja_env.filters['time_ago'] = time_ago
+    
     # Default route
     @app.route('/')
     def index():
         return redirect(url_for('dashboard.index'))
+        
+    # Error Handlers
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        return render_template('errors/500.html'), 500
         
     # Attempt to seed users (will safely fail if DB migrations haven't run)
     seed_users(app)

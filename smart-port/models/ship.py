@@ -8,7 +8,7 @@ class Ship(db.Model):
     ship_name = db.Column(db.String(100), nullable=False, index=True)
     arrival_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     destination = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(50), nullable=False, default='Arriving') # Docked, Arriving, Departed, Delayed
+    status = db.Column(db.String(50), nullable=False, default='Arrived') # Arrived, Docked, Loading, Unloading, Departed, Delayed
     fuel_level = db.Column(db.Float, nullable=False, default=100.0) # percentage
     cargo_capacity = db.Column(db.Integer, nullable=False) # max containers
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
